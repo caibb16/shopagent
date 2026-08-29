@@ -27,4 +27,8 @@ public final class PromptTemplates {
     public static String queryRewriter(String userText) {
         return String.format(load("query-rewriter.st"), userText);
     }
+
+    public static String summary(String priorSummary, String transcript) {
+        return String.format(load("summary.st"), priorSummary, transcript);
+    }
 }

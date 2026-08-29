@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Builds the {@link ChatClient} used by every Agent.
  *
@@ -50,5 +53,16 @@ public class DeepSeekConfig {
         return ChatClient.builder(chatModel)
                 .defaultAdvisors(new LoggingAdvisor(), new TokenUsageAdvisor())
                 .build();
+    }
+
+    /**
+     * Shared worker pool for the SSE chat endpoint. The HTTP request thread returns
+     * immediately with the SseEmitter; the actual AgentService.handle(...) subscription
+     * (including tool callbacks) runs here. A ThreadLocal UserContext survives on this
+     * thread for the entire stream lifecycle.
+     */
+    @Bean(destroyMethod = "shutdown")
+    public ExecutorService chatWorkerPool() {
+        return Executors.newFixedThreadPool(16);
     }
 }
