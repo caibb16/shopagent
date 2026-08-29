@@ -11,3 +11,8 @@ shopagent:
     backend: simple
   session:
     summary-every-n-turns: 5
+
+spring:
+  sql:
+    init:
+      mode: never

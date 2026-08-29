@@ -79,6 +79,35 @@
             <artifactId>client</artifactId>
             <version>${qdrant.version}</version>
         </dependency>
+        <!-- Qdrant client 1.8.0 declares its gRPC / protobuf / guava deps as
+             runtime-scoped, so they aren't visible at compile time. We add
+             them explicitly at compile scope so the prod-profile impls in
+             com.example.shopagent.rag.QdrantVectorIndex compile cleanly. -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-api</artifactId>
+            <version>1.59.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>1.59.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>1.59.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.24.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>30.1-jre</version>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>

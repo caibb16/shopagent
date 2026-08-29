@@ -20,3 +20,7 @@ spring:
     url: ${DATABASE_URL:jdbc:mysql://localhost:3306/shopagent}
     username: ${DATABASE_USER:shopagent}
     password: ${DATABASE_PASSWORD:}
+  sql:
+    init:
+      mode: always
+      platform: mysql
