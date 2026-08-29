@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: shopagent
+  profiles:
+    active: dev
+  # dev profile: Spring AI's OpenAiAutoConfiguration hard-requires an api-key
+  # at boot, and we want clone-and-run without setting one. Exclude it here;
+  # Task 8 adds a manual ChatClient bean that handles the optional api-key path.
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+shopagent:
+  llm:
+    api-key: ${DEEPSEEK_API_KEY:}
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    model: ${DEEPSEEK_MODEL:deepseek-chat}
+    embedding-model: ${DEEPSEEK_EMBEDDING_MODEL:bge-small-zh}
+  vector:
+    backend: ${VECTOR_BACKEND:simple}
+  session:
+    summary-every-n-turns: 5
