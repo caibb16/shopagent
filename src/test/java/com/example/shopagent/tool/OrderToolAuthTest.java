@@ -31,13 +31,14 @@ class OrderToolAuthTest {
     @Test
     void ownerCanRead() {
         UserContext.set(new UserContext(1L, "s"));
-        assertThat(tool.getOrderDetail("O1").orderId()).isEqualTo("O1");
+        // null ToolContext → fallback to ThreadLocal UserContext
+        assertThat(tool.getOrderDetail("O1", null).orderId()).isEqualTo("O1");
     }
 
     @Test
     void nonOwnerBlocked() {
         UserContext.set(new UserContext(2L, "s"));
-        assertThatThrownBy(() -> tool.getOrderDetail("O1"))
+        assertThatThrownBy(() -> tool.getOrderDetail("O1", null))
                 .isInstanceOf(ToolAuthException.class)
                 .hasMessageContaining("无权访问");
     }
@@ -45,7 +46,7 @@ class OrderToolAuthTest {
     @Test
     void unknownOrderThrows() {
         UserContext.set(new UserContext(1L, "s"));
-        assertThatThrownBy(() -> tool.getOrderDetail("NOPE"))
+        assertThatThrownBy(() -> tool.getOrderDetail("NOPE", null))
                 .isInstanceOf(ToolAuthException.class)
                 .hasMessageContaining("订单不存在");
     }

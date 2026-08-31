@@ -4,6 +4,7 @@ import com.example.shopagent.business.domain.Refund;
 import com.example.shopagent.business.repo.OrderRepository;
 import com.example.shopagent.business.repo.RefundRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,9 @@ public class RefundTool {
     @Tool(description = "为当前用户的指定订单提交退款申请。需要用户已登录；仅能为自己已发货或已送达的订单申请退款。")
     public Refund createRefundOrder(
             @ToolParam(description = "订单号") String orderId,
-            @ToolParam(description = "退款原因") String reason) {
-        Long uid = UserContext.current().userId();
+            @ToolParam(description = "退款原因") String reason,
+            ToolContext toolContext) {
+        Long uid = UserContext.resolveUserId(toolContext);
         var order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ToolAuthException("订单不存在"));
         if (!order.getUserId().equals(uid)) {

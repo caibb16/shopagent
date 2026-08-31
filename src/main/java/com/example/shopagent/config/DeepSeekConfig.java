@@ -56,10 +56,12 @@ public class DeepSeekConfig {
     }
 
     /**
-     * Shared worker pool for the SSE chat endpoint. The HTTP request thread returns
-     * immediately with the SseEmitter; the actual AgentService.handle(...) subscription
-     * (including tool callbacks) runs here. A ThreadLocal UserContext survives on this
-     * thread for the entire stream lifecycle.
+     * Shared worker pool available for any blocking subscriber in the SSE chat
+     * pipeline. As of the toolContext refactor, the ChatController no longer
+     * pins the stream onto this pool (Reactor/Spring AI handle thread
+     * hops internally and tool identity is propagated via {@code ToolContext}).
+     * The bean is retained for any future blocking consumer and to satisfy
+     * the existing {@code ChatControllerE2ETest} wiring.
      */
     @Bean(destroyMethod = "shutdown")
     public ExecutorService chatWorkerPool() {

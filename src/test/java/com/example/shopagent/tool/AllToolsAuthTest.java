@@ -38,7 +38,8 @@ class AllToolsAuthTest {
     @Test
     void logisticsBlocksNonOwner() {
         UserContext.set(new UserContext(2L, "s"));
-        assertThatThrownBy(() -> logistics.getLogistics("O1")).isInstanceOf(ToolAuthException.class);
+        assertThatThrownBy(() -> logistics.getLogistics("O1", null))
+                .isInstanceOf(ToolAuthException.class);
     }
 
     @Test
@@ -46,14 +47,14 @@ class AllToolsAuthTest {
         UserContext.set(new UserContext(1L, "s"));
         orderRepo.save(Order.builder().orderId("PEND").userId(1L).status("PENDING")
                 .totalAmount(BigDecimal.TEN).items(List.of()).build());
-        assertThatThrownBy(() -> refund.createRefundOrder("PEND", "test"))
+        assertThatThrownBy(() -> refund.createRefundOrder("PEND", "test", null))
                 .isInstanceOf(ToolAuthException.class);
     }
 
     @Test
     void refundCreatesRecord() {
         UserContext.set(new UserContext(1L, "s"));
-        var r = refund.createRefundOrder("O1", "不想要了");
+        var r = refund.createRefundOrder("O1", "不想要了", null);
         assertThat(r.getStatus()).isEqualTo("PENDING");
         assertThat(r.getUserId()).isEqualTo(1L);
     }

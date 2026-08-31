@@ -15,7 +15,12 @@ public class HandoffService {
                     try {
                         com.example.shopagent.tool.UserContext.set(
                                 new com.example.shopagent.tool.UserContext(userId, sessionId));
-                        var r = escalateTool.escalateToHuman(userText, "用户触发投诉/升级");
+                        // null ToolContext → UserContext.resolveUserId falls back to
+                        // the ThreadLocal this method sets. The HandoffService runs
+                        // the tool synchronously on the same worker thread, so the
+                        // ThreadLocal is safe here (it's the ToolAgent / streaming
+                        // path where cross-thread propagation was needed).
+                        var r = escalateTool.escalateToHuman(userText, "用户触发投诉/升级", null);
                         return Flux.just("已为您排队，当前等待 " + r.get("queuePosition") + " 人，预计等待 " + r.get("eta"));
                     } finally {
                         com.example.shopagent.tool.UserContext.clear();
