@@ -2,12 +2,14 @@ package com.example.shopagent.business.repo.impl;
 
 import com.example.shopagent.business.domain.Product;
 import com.example.shopagent.business.repo.ProductRepository;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
+@Profile("dev")
 public class InMemoryProductRepository implements ProductRepository {
     private final Map<String, Product> store = new ConcurrentHashMap<>();
     @Override public Optional<Product> findById(String id) { return Optional.ofNullable(store.get(id)); }

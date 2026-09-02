@@ -13,7 +13,7 @@ import java.util.List;
  * The query method {@link #findByUserId(Long)} is derived from its name.
  */
 @Repository
-@Profile("prod")
+@Profile("!dev")
 public interface JpaCouponRepository extends JpaRepository<Coupon, String>, CouponRepository {
 
     @Override

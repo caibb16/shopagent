@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @Slf4j
 @Configuration
-@Profile("dev")
+@Profile("!prod")
 @RequiredArgsConstructor
 public class KnowledgeBaseBootstrap {
     private final VectorIndex vectorIndex;

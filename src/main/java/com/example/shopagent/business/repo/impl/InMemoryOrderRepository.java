@@ -2,12 +2,14 @@ package com.example.shopagent.business.repo.impl;
 
 import com.example.shopagent.business.domain.Order;
 import com.example.shopagent.business.repo.OrderRepository;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
+@Profile("dev")
 public class InMemoryOrderRepository implements OrderRepository {
     private final Map<String, Order> store = new ConcurrentHashMap<>();
 

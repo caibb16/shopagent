@@ -15,7 +15,7 @@ import java.util.List;
  * {@code findById(String)} to avoid recursion through the domain interface.
  */
 @Repository
-@Profile("prod")
+@Profile("!dev")
 public interface JpaProductRepository extends JpaRepository<Product, String>, ProductRepository {
 
     @Override

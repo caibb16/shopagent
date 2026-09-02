@@ -17,7 +17,7 @@ import java.util.*;
  * model — see Task 19.
  */
 @Component
-@Profile("dev")
+@Profile("!prod")
 public class InMemoryVectorIndex implements VectorIndex {
     private final Map<String, ScoredDoc> docs = new LinkedHashMap<>();
 

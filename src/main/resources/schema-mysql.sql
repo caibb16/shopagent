@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS user (
 CREATE TABLE IF NOT EXISTS orders (
     order_id VARCHAR(32) PRIMARY KEY,
     user_id BIGINT,
+    items JSON,
     total_amount DECIMAL(10,2),
     status VARCHAR(16),
     tracking_number VARCHAR(64),
@@ -36,4 +37,12 @@ CREATE TABLE IF NOT EXISTS coupon (
     discount DECIMAL(10,2),
     expires_at DATETIME,
     used TINYINT(1)
+);
+
+CREATE TABLE IF NOT EXISTS product (
+    product_id VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(128),
+    category VARCHAR(64),
+    price DECIMAL(10,2),
+    description TEXT
 );

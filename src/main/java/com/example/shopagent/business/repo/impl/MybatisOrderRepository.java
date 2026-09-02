@@ -23,7 +23,7 @@ import java.util.Optional;
  * bugs.
  */
 @Repository
-@Profile("prod")
+@Profile("!dev")
 public class MybatisOrderRepository implements OrderRepository {
 
     @Autowired(required = false)

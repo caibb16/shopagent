@@ -1,0 +1,30 @@
+# Local profile: MySQL for business data, in-memory for session/vector.
+# Usage: mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+shopagent:
+  llm:
+    api-key: ${DEEPSEEK_API_KEY}
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    model: ${DEEPSEEK_MODEL:deepseek-chat}
+  vector:
+    backend: simple
+
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+  datasource:
+    url: jdbc:mysql://localhost:3306/shopagent?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: shopagent
+    password: shopagent123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      platform: mysql
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect

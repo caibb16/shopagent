@@ -17,7 +17,7 @@ import java.util.List;
  * empty lists.
  */
 @Repository
-@Profile("prod")
+@Profile("!dev")
 public class MybatisRefundRepository implements RefundRepository {
 
     @Autowired(required = false)

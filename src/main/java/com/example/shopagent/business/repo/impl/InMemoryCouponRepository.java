@@ -2,11 +2,13 @@ package com.example.shopagent.business.repo.impl;
 
 import com.example.shopagent.business.domain.Coupon;
 import com.example.shopagent.business.repo.CouponRepository;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
+@Profile("dev")
 public class InMemoryCouponRepository implements CouponRepository {
     private final Map<String, Coupon> store = new ConcurrentHashMap<>();
     @Override public List<Coupon> findByUserId(Long userId) {

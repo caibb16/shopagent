@@ -17,10 +17,19 @@ shopagent:
 
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/shopagent}
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/shopagent?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai}
     username: ${DATABASE_USER:shopagent}
-    password: ${DATABASE_PASSWORD:}
+    password: ${DATABASE_PASSWORD:shopagent123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   sql:
     init:
       mode: always
       platform: mysql
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
+  data:
+    redis:
+      address: ${REDIS_ADDRESS:redis://localhost:6379}

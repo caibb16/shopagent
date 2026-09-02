@@ -15,6 +15,6 @@ import org.springframework.stereotype.Repository;
  * otherwise recurse back through the domain interface.
  */
 @Repository
-@Profile("prod")
+@Profile("!dev")
 public interface JpaUserRepository extends JpaRepository<User, Long>, UserRepository {
 }

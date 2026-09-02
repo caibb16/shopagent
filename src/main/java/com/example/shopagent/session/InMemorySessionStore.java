@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Profile("dev")
+@Profile("!prod")
 public class InMemorySessionStore implements SessionStore {
     private final Map<String, Deque<Message>> histories = new ConcurrentHashMap<>();
     private final Map<String, String> summaries = new ConcurrentHashMap<>();
