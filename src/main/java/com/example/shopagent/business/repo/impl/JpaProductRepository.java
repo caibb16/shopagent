@@ -2,7 +2,6 @@ package com.example.shopagent.business.repo.impl;
 
 import com.example.shopagent.business.domain.Product;
 import com.example.shopagent.business.repo.ProductRepository;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,7 +14,6 @@ import java.util.List;
  * {@code findById(String)} to avoid recursion through the domain interface.
  */
 @Repository
-@Profile("!dev")
 public interface JpaProductRepository extends JpaRepository<Product, String>, ProductRepository {
 
     @Override

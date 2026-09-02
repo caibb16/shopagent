@@ -12,7 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 
@@ -34,7 +33,6 @@ import static org.mockito.Mockito.when;
  */
 @WebFluxTest(controllers = ChatController.class)
 @Import({InMemorySessionStore.class, SseErrorSender.class, ChatControllerE2ETest.TestBeans.class})
-@ActiveProfiles("dev")
 class ChatControllerE2ETest {
 
     @Autowired

@@ -9,7 +9,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Sanity check that the BM25-only dev retrieval stack returns sensible hits
+ * Sanity check that the BM25-only retrieval stack returns sensible hits
  * against the real 52-entry FAQ knowledge base (not just synthetic docs).
  */
 @SpringBootTest

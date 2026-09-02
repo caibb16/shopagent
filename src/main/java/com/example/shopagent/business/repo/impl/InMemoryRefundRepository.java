@@ -2,14 +2,10 @@ package com.example.shopagent.business.repo.impl;
 
 import com.example.shopagent.business.domain.Refund;
 import com.example.shopagent.business.repo.RefundRepository;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Repository;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-@Repository
-@Profile("dev")
 public class InMemoryRefundRepository implements RefundRepository {
     private final Map<String, Refund> store = new ConcurrentHashMap<>();
     private final AtomicLong seq = new AtomicLong();

@@ -1,14 +1,27 @@
 spring:
   application:
     name: shopagent
-  profiles:
-    active: dev
-  # dev profile: Spring AI's OpenAiAutoConfiguration hard-requires an api-key
-  # at boot, and we want clone-and-run without setting one. Exclude it here;
-  # Task 8 adds a manual ChatClient bean that handles the optional api-key path.
   autoconfigure:
     exclude:
       - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
+  datasource:
+    url: jdbc:mysql://localhost:3306/shopagent?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: shopagent
+    password: shopagent123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      platform: mysql
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 server:
   port: 8080
@@ -26,6 +39,6 @@ shopagent:
     model: ${DEEPSEEK_MODEL:deepseek-chat}
     embedding-model: ${DEEPSEEK_EMBEDDING_MODEL:bge-small-zh}
   vector:
-    backend: ${VECTOR_BACKEND:simple}
+    backend: simple
   session:
     summary-every-n-turns: 5

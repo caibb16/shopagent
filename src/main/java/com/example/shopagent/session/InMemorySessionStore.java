@@ -1,13 +1,13 @@
 package com.example.shopagent.session;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Profile("!prod")
+@Primary
 public class InMemorySessionStore implements SessionStore {
     private final Map<String, Deque<Message>> histories = new ConcurrentHashMap<>();
     private final Map<String, String> summaries = new ConcurrentHashMap<>();

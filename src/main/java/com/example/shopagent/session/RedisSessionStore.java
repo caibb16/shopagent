@@ -3,7 +3,6 @@ package com.example.shopagent.session;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +18,6 @@ import java.util.Optional;
  * scoped per session id so multiple sessions coexist cleanly.
  */
 @Component
-@Profile("prod")
 @RequiredArgsConstructor
 public class RedisSessionStore implements SessionStore {
 

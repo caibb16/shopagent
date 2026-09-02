@@ -1,6 +1,5 @@
 package com.example.shopagent.rag;
 
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -17,7 +16,6 @@ import java.util.*;
  * model — see Task 19.
  */
 @Component
-@Profile("!prod")
 public class InMemoryVectorIndex implements VectorIndex {
     private final Map<String, ScoredDoc> docs = new LinkedHashMap<>();
 

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.shopagent.business.domain.Refund;
 import com.example.shopagent.business.repo.RefundRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.List;
  * empty lists.
  */
 @Repository
-@Profile("!dev")
 public class MybatisRefundRepository implements RefundRepository {
 
     @Autowired(required = false)

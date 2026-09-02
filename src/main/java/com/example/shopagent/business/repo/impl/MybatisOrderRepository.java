@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.shopagent.business.domain.Order;
 import com.example.shopagent.business.repo.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,7 +22,6 @@ import java.util.Optional;
  * bugs.
  */
 @Repository
-@Profile("!dev")
 public class MybatisOrderRepository implements OrderRepository {
 
     @Autowired(required = false)
