@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Prod-profile {@link SessionStore} backed by Redis.
+ * {@link SessionStore} backed by Redis.
  *
  * <p>History is stored as a Redis list under {@code session:hist:<sid>};
  * summaries as a string under {@code session:sum:<sid>}. Both keys are

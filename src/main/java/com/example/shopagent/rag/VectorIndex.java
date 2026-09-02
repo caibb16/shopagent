@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Abstraction over a vector store used by the RAG layer.
  *
- * <p>Implementations: in-memory (dev/test) and Qdrant (prod).
+ * <p>Implementation: in-memory ({@link InMemoryVectorIndex}).
  */
 public interface VectorIndex {
 

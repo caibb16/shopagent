@@ -9,26 +9,17 @@ services:
       MYSQL_PASSWORD: shopagentpw
     ports: ["3306:3306"]
     volumes:
-      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./src/main/resources/schema-mysql.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./src/main/resources/data-mysql.sql:/docker-entrypoint-initdb.d/02-data.sql
   redis:
     image: redis:7
     ports: ["6379:6379"]
-  qdrant:
-    image: qdrant/qdrant:latest
-    ports: ["6333:6333", "6334:6334"]
-    volumes:
-      - qdrant_data:/qdrant/storage
   app:
     build: .
-    depends_on: [mysql, redis, qdrant]
+    depends_on: [mysql, redis]
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       DATABASE_URL: jdbc:mysql://mysql:3306/shopagent
       DATABASE_USER: shopagent
       DATABASE_PASSWORD: shopagentpw
-      REDIS_ADDRESS: redis://redis:6379
-      QDRANT_HOST: qdrant
-      QDRANT_PORT: 6334
     ports: ["8080:8080"]
-volumes:
-  qdrant_data:

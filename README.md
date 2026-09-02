@@ -38,7 +38,7 @@ ShopAgent 是一个面向电商场景的智能客服后端，基于 Spring Boot 
 - 📚 **RAG 混合检索**：向量检索 + BM25 关键词检索，RRF 融合
 - 🔄 **多轮对话与摘要压缩**：每 N 轮自动压缩历史，Token 消耗降低 60%
 - 🌊 **SSE 流式响应**：基于 WebFlux `Flux<ServerSentEvent>`，Token 粒度推送
-- 🧱 **可插拔架构**：dev 用 In-Memory，prod 接 MySQL/Redis/Qdrant，Spring Profile 一键切换
+- 🧱 **MySQL + Redis 集成**：MySQL 持久化业务数据，Redis 存储会话
 
 业务场景：**订单咨询、物流查询、退款工单、FAQ 问答**。
 
@@ -56,7 +56,7 @@ ShopAgent 是一个面向电商场景的智能客服后端，基于 Spring Boot 
 | 混合检索（向量 + BM25） | 不是简单调包 | `rag/HybridRetriever.java`（RRF） |
 | 查询改写 | 理解检索增强 | `rag/QueryRewriter.java` |
 | 评估 harness | 工程化思维 | `eval/RagEvaluator.java` + `data/eval/test_set.jsonl` |
-| dev/prod 双实现 + Profile 切换 | 抽象能力、可演进架构 | `business/repo/impl/*` |
+| MySQL + Redis 集成 | 抽象能力、可演进架构 | `business/repo/impl/*` |
 
 ---
 
@@ -69,14 +69,13 @@ ShopAgent 是一个面向电商场景的智能客服后端，基于 Spring Boot 
 | AI 框架 | Spring AI | 1.0.0-M6 | LLM 集成（OpenAI 兼容协议 → DeepSeek） |
 | ORM（业务主） | MyBatis-Plus | 3.5.7 | 订单/退款表（写多读多） |
 | ORM（配置类） | Spring Data JPA | 3.3.4 | 用户/优惠券/产品（读多写少） |
-| 缓存 | Redisson | 3.34.1 | 会话存储、分布式锁（prod） |
-| 向量库 | Qdrant | 1.8.0 | 知识库向量检索（prod） |
+| 缓存 | Redisson | 3.34.1 | 会话存储、分布式锁 |
+| 向量检索 | BM25（内存） | — | 知识库关键词检索，CJK 分词 |
 | LLM | DeepSeek | deepseek-chat | 中文友好、OpenAI 兼容 |
-| Embedding | 占位（dev NoOp）/ Qdrant 远端 | — | prod 由 Qdrant 服务侧生成 |
 | 构建 | Maven | 3.9.9 | 多模块构建 |
-| 部署 | Docker + Docker Compose | — | 一键启动 MySQL+Redis+Qdrant+App |
+| 部署 | Docker + Docker Compose | — | 一键启动 MySQL+Redis+App |
 | 可观测 | Spring Boot Actuator + 自研 Advisors | — | health/metrics + LLM 日志/token 统计 |
-| 测试 | JUnit 5 + Mockito + AssertJ | — | 33 个测试，覆盖单元/切片/E2E |
+| 测试 | JUnit 5 + Mockito + AssertJ | — | 40 个测试，覆盖单元/切片/E2E |
 
 ---
 
@@ -103,11 +102,11 @@ ShopAgent 是一个面向电商场景的智能客服后端，基于 Spring Boot 
             ┌──────────┬───────────┼───────────┬──────────┐
             ▼          ▼           ▼           ▼          ▼
        SessionStore  RAG       IntentCls   SessionSummary ChatClient
-       (Redis/内存)  (Qdrant)   (规则+LLM)  (LLM压缩)    (DeepSeek)
+       (Redis)       (BM25)    (规则+LLM)  (LLM压缩)     (DeepSeek)
             │          │
             ▼          ▼
          MySQL    VectorIndex
-                   (Qdrant/InMemory)
+                   (InMemory)
 ```
 
 ### 核心流程时序
@@ -139,19 +138,23 @@ ShopAgent 是一个面向电商场景的智能客服后端，基于 Spring Boot 
 
 - **JDK 17+**（项目用 `--release 17` 编译；JDK 25 测试通过）
 - **Maven 3.9+**
-- **（可选）Docker** — 仅 prod 部署需要
+- **MySQL 8.x** + **Redis 6+**（本地或 Docker）
 
 ### 1. 克隆与构建
 
 ```bash
 git clone <repo>
 cd shopagent
-mvn clean test            # 33 个测试应全部通过
+mvn clean test            # 40 个测试应全部通过
 ```
 
-### 2. 启动 dev profile（无需任何外部依赖）
+### 2. 启动服务（需先启动 MySQL 和 Redis）
 
 ```bash
+# 确保 MySQL 和 Redis 已运行，或用 Docker：
+docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=shopagent -e MYSQL_USER=shopagent -e MYSQL_PASSWORD=shopagent123 -p 3306:3306 mysql:8
+docker run -d --name redis -p 6379:redis redis:7
+
 mvn spring-boot:run
 ```
 
@@ -160,14 +163,11 @@ mvn spring-boot:run
 ```
 Started ShopAgentApplication in 4.0 seconds
 Knowledge base loaded: 52 entries
-Mock data loaded: 3 users, 4 orders, 2 coupons, 4 products
 ```
-
-> ⚠️ **dev profile 不需要 DeepSeek API key**，ChatClient 会用 `dev-placeholder` 构建。真实 LLM 调用会 401，但所有非 LLM 路径（鉴权、意图规则、BM25 检索）正常工作。
 
 ### 3. 调用 SSE 接口
 
-需要真实 LLM 时，传入 API key：
+启动前需设置 DeepSeek API key：
 
 ```bash
 export DEEPSEEK_API_KEY=sk-xxx
@@ -191,7 +191,7 @@ data:当前在上海中转站，预计明天送达。
 data:[DONE]
 ```
 
-### 4. 用真实 LLM 试用不同意图
+### 4. 试用不同意图
 
 | 用户输入 | 意图 | 走哪条路 |
 | --- | --- | --- |
@@ -220,7 +220,7 @@ data:[DONE]
 
 | 名称 | 必填 | 说明 |
 | --- | --- | --- |
-| `X-User-Id` | 是 | 当前用户 ID（dev 用 mock: 1/2/999） |
+| `X-User-Id` | 是 | 当前用户 ID |
 
 **响应：** `Content-Type: text/event-stream`
 
@@ -237,7 +237,7 @@ curl -N "http://localhost:8080/api/chat/stream?sessionId=demo&message=7天无理
 
 ### `GET /actuator/health`
 
-健康检查端点，prod 用于 k8s liveness/readiness probe。
+健康检查端点，用于 k8s liveness/readiness probe。
 
 ```bash
 curl http://localhost:8080/actuator/health
@@ -252,27 +252,20 @@ Micrometer 指标（`http.server.requests`、JVM、Tomcat 等）。
 
 ## 配置说明
 
-### Profile 切换
-
-默认 `application.yml` 设置 `spring.profiles.active: dev`。可通过环境变量覆盖：
-
-```bash
-SPRING_PROFILES_ACTIVE=prod java -jar target/shopagent-0.1.0-SNAPSHOT.jar
-```
-
-### 关键配置项（`application.yml` + `application-{profile}.yml`）
+### 关键配置项（`application.yml`）
 
 | 配置项 | 默认 | 说明 |
 | --- | --- | --- |
-| `shopagent.llm.api-key` | `${DEEPSEEK_API_KEY:dev-placeholder}` | DeepSeek API key |
+| `shopagent.llm.api-key` | `${DEEPSEEK_API_KEY:}` | DeepSeek API key（必填） |
 | `shopagent.llm.base-url` | `https://api.deepseek.com` | OpenAI 兼容端点 |
 | `shopagent.llm.model` | `deepseek-chat` | 模型名 |
-| `shopagent.vector.backend` | `simple` (dev) / `qdrant` (prod) | 向量库后端 |
-| `shopagent.vector.qdrant.host` | `localhost` | Qdrant 主机 |
-| `shopagent.vector.qdrant.port` | `6334` | Qdrant gRPC 端口 |
-| `shopagent.vector.qdrant.collection` | `shopagent-kb` | 集合名 |
+| `shopagent.vector.backend` | `simple` | 向量库后端（BM25 内存实现） |
 | `shopagent.session.summary-every-n-turns` | `5` | 摘要压缩触发频率 |
-| `spring.datasource.url` | H2 内存 (dev) / MySQL (prod) | 数据库连接 |
+| `spring.datasource.url` | `jdbc:mysql://localhost:3306/shopagent` | MySQL 连接地址 |
+| `spring.datasource.username` | `shopagent` | MySQL 用户名 |
+| `spring.datasource.password` | `shopagent123` | MySQL 密码 |
+| `spring.data.redis.host` | `localhost` | Redis 主机 |
+| `spring.data.redis.port` | `6379` | Redis 端口 |
 
 ---
 
@@ -287,7 +280,7 @@ mvn test
 输出应为：
 
 ```
-Tests run: 33, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 ### 测试分布
@@ -296,7 +289,6 @@ Tests run: 33, Failures: 0, Errors: 0, Skipped: 0
 | --- | --- | --- |
 | `ShopAgentApplicationTests` | 1 | Spring 上下文加载（autoconfig 回归保护） |
 | `InMemoryOrderRepositoryTest` | 3 | Repository TDD（红→绿） |
-| `MockDataLoaderTest` | 2 | Mock 数据完整性 |
 | `UserContextTest` | 3 | ThreadLocal 读写 + clear 防泄漏 |
 | `InMemorySessionStoreTest` | 5 | 会话存储边界（limit、隔离、摘要） |
 | `PromptTemplatesTest` | 3 | 模板格式化 |
@@ -304,6 +296,7 @@ Tests run: 33, Failures: 0, Errors: 0, Skipped: 0
 | `KnowledgeBaseRetrievalTest` | 1 | 真实 52 条 FAQ 检索（中文查询） |
 | `OrderToolAuthTest` | 3 | 订单工具鉴权（owner/非 owner/不存在） |
 | `AllToolsAuthTest` | 3 | 其他 5 个工具鉴权 |
+| `ToolContextPropagationTest` | 9 | 工具上下文传播（userId 透传） |
 | `IntentClassifierTest` | 4 | 规则分类 + 黑名单 |
 | `ChatControllerE2ETest` | 1 | SSE 端到端切片测试 |
 | `RagEvaluatorTest` | 1 | 召回率计算 |
@@ -343,8 +336,7 @@ docker compose logs -f app
 | 后端 API | `http://localhost:8080` |
 | SSE 端点 | `http://localhost:8080/api/chat/stream` |
 | Actuator | `http://localhost:8080/actuator/health` |
-| Qdrant UI | `http://localhost:6333/dashboard` |
-| MySQL | `localhost:3306`（user: shopagent / pass: shopagentpw） |
+| MySQL | `localhost:3306`（user: shopagent / pass: shopagent123） |
 | Redis | `localhost:6379` |
 
 ### 仅构建镜像
@@ -402,15 +394,6 @@ public class MyTool {
 2. 重启服务，`KnowledgeBaseBootstrap` 会自动加载
 3. 可选：在 `data/eval/test_set.jsonl` 增加对应评估用例
 
-### 切换到真实 Embedding（替换 NoOp）
-
-dev profile 当前用 NoOp 向量（BM25 leg 承担检索），prod 用 Qdrant 远端 embedding。
-
-如需 dev 也用真实 embedding：
-1. 在 `application-dev.yml` 设置 `spring.ai.openai.api-key`（或换 ONNX 本地模型）
-2. 把 `InMemoryVectorIndex` 改回用 `EmbeddingModel` 注入
-3. 注意 JDK 25 + ONNX 兼容性（详见常见问题 #2）
-
 ---
 
 ## 面试高频问答
@@ -430,7 +413,7 @@ A: 三层：① 工具内部 `try/catch` + 重试；② `SseErrorSender` 推送 
 A: SSE 单向、HTTP 兼容、自动重连，客服场景足够；WebSocket 双向但需要单独协议升级。
 
 **Q: Redis 怎么存会话？**
-A: dev 用 `ConcurrentHashMap<sessionId, Deque<Message>>`；prod 用 Redis `list`（`LPUSH`/`LRANGE`）+ `set`（摘要）。Key 格式：`session:hist:{sessionId}` 和 `session:sum:{sessionId}`。
+A: 用 Redis `list`（`LPUSH`/`LRANGE`）存储对话历史 + `set`（摘要）。Key 格式：`session:hist:{sessionId}` 和 `session:sum:{sessionId}`。
 
 **Q: 怎么控制 LLM 调用成本？**
 A: ① 历史摘要压缩（每 N 轮一次）；② 缓存相似 query 结果；③ 限流（按用户/全局）；④ 用小模型做意图路由、大模型做生成。
@@ -442,10 +425,10 @@ A: 类似 AOP 拦截器，在 LLM 调用前后插入逻辑。本项目用了 `Lo
 A: v2：异步退款工单、订单状态变更触发主动通知客服。MVP 同步退款。
 
 **Q: MySQL 表怎么设计？**
-A: 见 `src/main/resources/schema.sql`。user / orders / refund / coupon 四张表，关键索引 `idx_user (user_id)`。
+A: 见 `src/main/resources/schema-mysql.sql`。user / orders / refund / coupon / product 五张表，关键索引 `idx_user (user_id)`。
 
 **Q: Docker Compose 一键启动？**
-A: `docker-compose.yml` 定义 mysql + redis + qdrant + app 四个 service，通过 env 注入连接信息，schema.sql 挂载到 MySQL init 目录。
+A: `docker-compose.yml` 定义 mysql + redis + app 三个 service，通过 env 注入连接信息，schema-mysql.sql 挂载到 MySQL init 目录。
 
 ### AI / Agent 专项
 
@@ -459,10 +442,10 @@ A: Reasoning + Acting 循环：Thought → Action → Observation → Thought...
 A: FC 准确率更高，模型原生支持；Prompt 调用灵活但靠模型自律、不可靠。本项目严格使用 FC。
 
 **Q: RAG 检索不准怎么排查？**
-A: ① 看召回：topK=20 是否覆盖目标文档；② 看 chunk 大小：本项目按"问题+答案"整篇切；③ 看 embedding：dev 用 NoOp，prod 用 Qdrant 远端；④ 看 query 改写：QueryRewriter 是否生效。
+A: ① 看召回：topK=20 是否覆盖目标文档；② 看 chunk 大小：本项目按"问题+答案"整篇切；③ 看 BM25 分词：CJK 用 unigram + bigram；④ 看 query 改写：QueryRewriter 是否生效。
 
 **Q: 向量库选型？**
-A: Milvus 性能强但部署重；Qdrant 单二进制 + REST/gRPC，demo 友好。
+A: 本项目使用 BM25 内存检索，适合 FAQ 场景。生产可选 Milvus（性能强但部署重）或 Qdrant（单二进制 + REST/gRPC，demo 友好）。
 
 **Q: 怎么防止 prompt 注入？**
 A: 三层：① 系统 prompt 约束；② 工具鉴权用 ThreadLocal，userId 不通过工具参数；③ 敏感操作（如退款）二次确认。
@@ -474,7 +457,7 @@ A: 单 Agent 适合窄场景（客服）；多 Agent 适合复杂任务分解（
 A: 中文约 1.5 字/token，英文 0.75 字/token。DeepSeek API 返回 `usage.prompt_tokens` / `completion_tokens`，由 `TokenUsageAdvisor` 累加。
 
 **Q: Embedding 模型选型？**
-A: 中文场景 bge-small-zh（轻量）/ bge-large-zh-v1.5（更准但慢）。本项目 prod 用 Qdrant 服务侧生成，dev NoOp。
+A: 本项目使用 BM25-only 向量检索，无需 Embedding 模型。如需语义检索，可选 bge-small-zh（轻量）/ bge-large-zh-v1.5（更准但慢）。
 
 **Q: 流式响应怎么实现？**
 A: LLM 端 DeepSeek 原生支持 SSE；Spring AI `ChatClient.stream().content()` 返回 `Flux<String>`；本项目包成 `Flux<ServerSentEvent<String>>` 推给客户端。
@@ -491,26 +474,24 @@ A: LLM 端 DeepSeek 原生支持 SSE；Spring AI `ChatClient.stream().content()`
 
 ### 2. 启动时报 "TransformersEmbeddingModel failed to load ONNX"
 
-**原因**：Spring AI 内置的 ONNX embedding 在 JDK 25 上 protobuf 解析失败。
+**原因**：Spring AI 内置的 ONNX embedding 加载失败。
 
-**解决**：dev profile 已用 NoOp `InMemoryVectorIndex` 规避，prod 用 Qdrant 远端 embedding。如需 dev 也用真实 embedding，降级到 JDK 17 或替换 ONNX 模型。
+**解决**：本项目使用 BM25-only 向量检索（`shopagent.vector.backend=simple`），不依赖 ONNX 或任何 Embedding 模型，可安全忽略此警告。
 
 ### 3. SSE 输出无内容 / 立即断开
 
 **检查**：
 - `X-User-Id` header 是否设置
 - DeepSeek API key 是否有效（401 → key 无效）
-- `mvn spring-boot:run` 日志是否报 `OpenAiAutoConfiguration` 启动失败
+- MySQL 和 Redis 是否已启动
 
 ### 4. `contextLoads` 测试失败
 
-dev profile 已排除 `OpenAiAutoConfiguration`（Task 1 fix）。如果自己修改了 `application.yml` 移除了 exclude，启动会会要求 API key，请恢复 exclude 或设置 `DEEPSEEK_API_KEY`。
+项目已排除 `OpenAiAutoConfiguration`。如果自己修改了 `application.yml` 移除了 exclude，启动会要求 API key，请恢复 exclude 或设置 `DEEPSEEK_API_KEY`。
 
 ### 5. 中文 FAQ 检索召回率低
 
-dev profile 仅 BM25 工作（CJK 分词：unigram + bigram）。如需语义匹配：
-- 启用 prod profile 走 Qdrant 远端 embedding
-- 或在 `application-dev.yml` 注入真实 `EmbeddingModel`
+项目使用 BM25 检索（CJK 分词：unigram + bigram）。如需语义匹配，可扩展为混合检索（BM25 + 向量），接入 Embedding 模型和向量数据库。
 
 ### 6. 修改 FAQ 后没生效
 
@@ -522,8 +503,8 @@ dev profile 仅 BM25 工作（CJK 分词：unigram + bigram）。如需语义匹
 
 ### v1（已完成）
 - ✅ 21 个 Task 全部交付
-- ✅ 33 个测试全部通过
-- ✅ dev/prod 双实现
+- ✅ 40 个测试全部通过
+- ✅ MySQL + Redis 集成
 - ✅ Docker Compose 一键启动
 
 ### v2（计划中，未实现）

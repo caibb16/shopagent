@@ -9,11 +9,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * Prod-profile {@link RefundRepository} backed by MyBatis-Plus.
+ * {@link RefundRepository} backed by MyBatis-Plus.
  *
  * <p>Same fail-loud policy as {@link MybatisOrderRepository}: a null mapper
- * indicates broken prod wiring, so we throw rather than silently return
- * empty lists.
+ * indicates broken wiring, so we throw rather than silently return empty lists.
  */
 @Repository
 public class MybatisRefundRepository implements RefundRepository {
@@ -24,8 +23,8 @@ public class MybatisRefundRepository implements RefundRepository {
     private void requireMapper() {
         if (mapper == null) {
             throw new IllegalStateException(
-                    "RefundMapper is not wired — prod profile requires mybatis-plus-spring-boot3-starter "
-                            + "and a configured DataSource. Check pom.xml and application-prod.yml.");
+                    "RefundMapper is not wired — requires mybatis-plus-spring-boot3-starter "
+                            + "and a configured DataSource. Check pom.xml and application.yml.");
         }
     }
 

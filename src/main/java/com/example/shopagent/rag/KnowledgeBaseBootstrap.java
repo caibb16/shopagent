@@ -18,10 +18,6 @@ import java.util.Map;
  * {@code knowledge/faq.jsonl} on application startup and indexes every entry
  * into both the {@link VectorIndex} and {@link InMemoryBm25Index}.
  *
- * <p>Defensively scoped to the {@code dev} profile because the dependencies it
- * autowires (vector + BM25) are dev-only implementations. Task 19 will introduce
- * a production vector index (Qdrant) and replace the BM25 concrete wiring here.
- *
  * <p>Doubles as the {@code @Configuration} that declares the BM25 index and the
  * {@link HybridRetriever} as beans. Both are deliberately plain-Java classes
  * (no stereotype annotations) so tests can construct them directly, so they

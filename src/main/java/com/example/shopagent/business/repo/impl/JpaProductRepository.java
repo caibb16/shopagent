@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Prod-profile {@link ProductRepository} backed by Spring Data JPA.
+ * {@link ProductRepository} backed by Spring Data JPA.
  * Query methods are derived from method names; do not override
  * {@code findById(String)} to avoid recursion through the domain interface.
  */

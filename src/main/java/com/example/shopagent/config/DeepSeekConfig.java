@@ -17,9 +17,9 @@ import java.util.concurrent.Executors;
  * Builds the {@link ChatClient} used by every Agent.
  *
  * <p>Spring AI's {@code OpenAiAutoConfiguration} is excluded in application.yml because it
- * hard-requires an API key at boot, which would break clone-and-run in the dev profile. So
- * the OpenAiApi / OpenAiChatModel chain is assembled manually here — this constructs
- * eagerly without validating the key, and only a real call would fail.
+ * requires an API key at boot. The OpenAiApi / OpenAiChatModel chain is assembled manually
+ * here so that the bean constructs eagerly without validating the key; only a real call
+ * would fail.
  */
 @Configuration
 public class DeepSeekConfig {

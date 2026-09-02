@@ -5,9 +5,9 @@ spring:
     exclude:
       - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
   datasource:
-    url: jdbc:mysql://localhost:3306/shopagent?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-    username: shopagent
-    password: shopagent123
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/shopagent?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai}
+    username: ${DATABASE_USER:shopagent}
+    password: ${DATABASE_PASSWORD:shopagent123}
     driver-class-name: com.mysql.cj.jdbc.Driver
   sql:
     init:

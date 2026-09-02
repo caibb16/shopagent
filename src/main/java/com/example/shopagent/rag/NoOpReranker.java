@@ -5,11 +5,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Default {@link Reranker} implementation: passthrough identity function.
- *
- * <p>Used in BOTH dev and prod profiles. Per MVP scope design doc, the real
- * Cross-Encoder reranker is deferred to v2 — for v1 every {@code Reranker}
- * dependency resolves to this no-op bean.
+ * No-op {@link Reranker}: passthrough identity function.
+ * Every {@code Reranker} dependency resolves to this bean until a real
+ * Cross-Encoder reranker is introduced.
  */
 @Component
 public class NoOpReranker implements Reranker {

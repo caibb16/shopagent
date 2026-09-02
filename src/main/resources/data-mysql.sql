@@ -1,4 +1,4 @@
--- Test data for shopagent. Loaded after schema-mysql.sql on prod startup.
+-- Test data for shopagent. Loaded after schema-mysql.sql on startup.
 
 INSERT IGNORE INTO user (id, name, level) VALUES
 (1, 'Alice', 'NORMAL'),

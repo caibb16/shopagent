@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * Prod-profile {@link CouponRepository} backed by Spring Data JPA.
+ * {@link CouponRepository} backed by Spring Data JPA.
  * The query method {@link #findByUserId(Long)} is derived from its name.
  */
 @Repository

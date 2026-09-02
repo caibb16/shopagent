@@ -10,16 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Prod-profile {@link OrderRepository} backed by MyBatis-Plus.
+ * {@link OrderRepository} backed by MyBatis-Plus.
  *
- * <p>NOTE on the {@code required = false} pattern: the prod profile always
- * ships with {@code mybatis-plus-spring-boot3-starter} on the classpath, so the
- * mapper MUST be wired in at boot. We use {@code required = false} only so that
- * dev tests (which never load this bean because it is {@code @Profile("prod")})
- * still construct cleanly if Spring ever decides to instantiate it. Operations
- * defend against a {@code null} mapper by failing LOUD with
- * {@link IllegalStateException} — silent empty results would mask prod wiring
- * bugs.
+ * <p>Uses {@code required = false} so that tests without the mapper on the
+ * classpath still construct cleanly. Operations defend against a {@code null}
+ * mapper by throwing {@link IllegalStateException} rather than returning
+ * silent empty results.
  */
 @Repository
 public class MybatisOrderRepository implements OrderRepository {
@@ -30,8 +26,8 @@ public class MybatisOrderRepository implements OrderRepository {
     private void requireMapper() {
         if (mapper == null) {
             throw new IllegalStateException(
-                    "OrderMapper is not wired — prod profile requires mybatis-plus-spring-boot3-starter "
-                            + "and a configured DataSource. Check pom.xml and application-prod.yml.");
+                    "OrderMapper is not wired — requires mybatis-plus-spring-boot3-starter "
+                            + "and a configured DataSource. Check pom.xml and application.yml.");
         }
     }
 

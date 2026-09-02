@@ -1,6 +1,6 @@
--- Prod-profile schema for MySQL 8.x.
--- Loaded by Spring Boot on prod startup when spring.sql.init.mode=always
--- (or manually via `mysql < schema.sql`). All tables are idempotent.
+-- Schema for MySQL 8.x.
+-- Loaded by Spring Boot on startup when spring.sql.init.mode=always
+-- (or manually via `mysql < schema-mysql.sql`). All tables are idempotent.
 
 CREATE TABLE IF NOT EXISTS user (
     id BIGINT PRIMARY KEY,

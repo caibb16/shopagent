@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Prod-profile {@link UserRepository} backed by Spring Data JPA.
+ * {@link UserRepository} backed by Spring Data JPA.
  *
  * <p>Spring Data resolves the inherited {@code findById(Long)} and
  * {@code save(User)} from {@link JpaRepository} as the concrete
