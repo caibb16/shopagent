@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.*;
 class PromptTemplatesTest {
     @Test
     void customerServiceSubstitutesBothPlaceholders() {
-        String out = PromptTemplates.customerService("KB", "SUMMARY");
-        assertThat(out).contains("KB").contains("SUMMARY");
+        String out = PromptTemplates.customerService("KB", "SUMMARY", "HISTORY");
+        assertThat(out).contains("KB").contains("SUMMARY").contains("HISTORY");
         assertThat(out).doesNotContain("%s");
     }
 

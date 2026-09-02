@@ -30,9 +30,10 @@ public class RagAgent {
                 .collect(Collectors.joining("\n"));
         if (kb.isBlank()) kb = "(无相关知识)";
         String summary = sessionStore.getSummary(sessionId).orElse("");
+        String history = sessionStore.formatRecentHistory(sessionId, 6);
 
         return chatClient.prompt()
-                .system(PromptTemplates.customerService(kb, summary))
+                .system(PromptTemplates.customerService(kb, summary, history))
                 .user(userText)
                 .stream().content();
     }

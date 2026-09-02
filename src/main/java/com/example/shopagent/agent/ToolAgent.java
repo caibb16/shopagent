@@ -26,6 +26,7 @@ public class ToolAgent {
 
     public Flux<String> stream(long userId, String sessionId, String userText) {
         String summary = sessionStore.getSummary(sessionId).orElse("");
+        String history = sessionStore.formatRecentHistory(sessionId, 6);
         String kb = "(工具型请求，优先调用工具)";
         // toolContext carries the server-side userId/sessionId to every tool
         // invocation. Spring AI 1.0.0-M6 passes this map into each @Tool method
@@ -34,7 +35,7 @@ public class ToolAgent {
         // The LLM never sees or modifies this map, so the security invariant
         // (server-only identity) holds.
         return chatClient.prompt()
-                .system(PromptTemplates.customerService(kb, summary))
+                .system(PromptTemplates.customerService(kb, summary, history))
                 .user(userText)
                 .tools(orderTool, logisticsTool, refundTool, couponTool, recommendTool, escalateTool)
                 .toolContext(Map.of("userId", userId, "sessionId", sessionId))

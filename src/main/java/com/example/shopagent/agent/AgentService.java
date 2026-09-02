@@ -16,7 +16,7 @@ public class AgentService {
     public Flux<String> handle(long userId, String sessionId, String userText) {
         Intent intent = intentClassifier.classifyWithUserContext(userText, userId);
         return switch (intent) {
-            case CHITCHAT -> chitchatAgent.stream(userText);
+            case CHITCHAT -> chitchatAgent.stream(sessionId, userText);
             case INQUIRY  -> ragAgent.stream(sessionId, userText);
             case ACTION   -> toolAgent.stream(userId, sessionId, userText);
             case COMPLAINT -> handoffService.handoff(userId, sessionId, userText);

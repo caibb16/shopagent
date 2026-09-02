@@ -16,8 +16,8 @@ public final class PromptTemplates {
         }
     }
 
-    public static String customerService(String kbContext, String summary) {
-        return String.format(load("customer-service.st"), kbContext, summary);
+    public static String customerService(String kbContext, String summary, String recentHistory) {
+        return String.format(load("customer-service.st"), kbContext, summary, recentHistory);
     }
 
     public static String intentClassifier(String userText) {
