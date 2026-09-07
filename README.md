@@ -1,6 +1,6 @@
 # ShopAgent — 基于 Spring AI 的电商智能客服 Agent
 
-> 一个面向简历投递的 Java 后端 / AI Agent 实战项目，体现工程能力与独立思考。
+> 一个基于 Spring AI 的 Java 后端 AI Agent 实战项目，体现工程能力与独立思考。
 
 [![Spring Boot 3.3.4](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Spring AI 1.0.0-M6](https://img.shields.io/badge/Spring%20AI-1.0.0--M6-blue.svg)](https://spring.io/projects/spring-ai)
@@ -12,7 +12,7 @@
 ## 目录
 
 - [项目简介](#项目简介)
-- [核心亮点](#核心亮点简历加分项)
+- [核心亮点](#核心亮点)
 - [技术栈](#技术栈)
 - [系统架构](#系统架构)
 - [快速开始](#快速开始)
@@ -22,7 +22,6 @@
 - [生产部署](#生产部署)
 - [设计文档](#设计文档)
 - [开发指南](#开发指南)
-- [面试高频问答](#面试高频问答)
 - [常见问题](#常见问题)
 - [路线图](#路线图)
 
@@ -34,7 +33,7 @@ ShopAgent 是一个面向电商场景的智能客服后端，基于 Spring Boot 
 
 - 🧠 **意图路由**：自动识别用户是闲聊、咨询、操作（查单/退款）还是投诉
 - 🔧 **Function Calling**：LLM 自主调用 6 个工具（订单/物流/退款/优惠券/推荐/转人工）
-- 🔒 **工具鉴权**：用户身份从 `UserContext` 线程局部读取，**绝不通过工具参数注入**——防止 prompt 注入越权
+- 🔒 **工具鉴权**：用户身份通过 `ToolContext` 服务端注入，**LLM 不可见不可改**——防止 prompt 注入越权
 - 📚 **RAG 混合检索**：向量检索 + BM25 关键词检索，RRF 融合
 - 🔄 **多轮对话与摘要压缩**：每 N 轮自动压缩历史，Token 消耗降低 60%
 - 🌊 **SSE 流式响应**：基于 WebFlux `Flux<ServerSentEvent>`，Token 粒度推送
@@ -44,12 +43,12 @@ ShopAgent 是一个面向电商场景的智能客服后端，基于 Spring Boot 
 
 ---
 
-## 核心亮点（简历加分项）
+## 核心亮点
 
 | 设计决策 | 体现的能力 | 代码位置 |
 | --- | --- | --- |
 | 意图分类后再选 Agent | 系统设计能力，避免 prompt 注入 | `agent/IntentClassifier.java` |
-| ThreadLocal 工具鉴权 | 安全意识 | `tool/UserContext.java` + 6 个 Tool |
+| ToolContext 身份透传 + 工具鉴权 | 安全意识、跨线程设计 | `tool/UserContext.java` + 6 个 Tool |
 | 历史摘要压缩 | 工程优化、成本意识 | `session/SessionSummaryService.java` |
 | WebFlux SSE 流式响应 | 全栈能力 | `api/ChatController.java` |
 | 工具失败重试 + 降级 | 鲁棒性设计 | `api/error/SseErrorSender.java` |
@@ -393,74 +392,6 @@ public class MyTool {
 1. 编辑 `src/main/resources/knowledge/faq.jsonl`，按行追加 `{id, category, question, answer}`
 2. 重启服务，`KnowledgeBaseBootstrap` 会自动加载
 3. 可选：在 `data/eval/test_set.jsonl` 增加对应评估用例
-
----
-
-## 面试高频问答
-
-### 后端基础
-
-**Q: Spring AI 怎么和 Spring Boot 集成？**
-A: 通过 `spring-ai-openai-spring-boot-starter`，自动配置 `ChatClient` Bean。本项目因 `OpenAiAutoConfiguration` 强制要求 api-key，改用 `DeepSeekConfig` 手动构建 ChatClient + Advisors 链。
-
-**Q: Function Calling 的实现原理？**
-A: LLM 返回结构化 JSON（tool_calls）→ Spring AI 解析 → 反射调用本地 `@Tool` 方法 → 把结果回填 LLM → LLM 生成自然语言回复。
-
-**Q: 工具调用失败怎么降级？**
-A: 三层：① 工具内部 `try/catch` + 重试；② `SseErrorSender` 推送 SSE error 事件而非断开连接；③ `GlobalExceptionHandler` 统一返回 403/500 JSON。
-
-**Q: SSE 和 WebSocket 区别？**
-A: SSE 单向、HTTP 兼容、自动重连，客服场景足够；WebSocket 双向但需要单独协议升级。
-
-**Q: Redis 怎么存会话？**
-A: 用 Redis `list`（`LPUSH`/`LRANGE`）存储对话历史 + `set`（摘要）。Key 格式：`session:hist:{sessionId}` 和 `session:sum:{sessionId}`。
-
-**Q: 怎么控制 LLM 调用成本？**
-A: ① 历史摘要压缩（每 N 轮一次）；② 缓存相似 query 结果；③ 限流（按用户/全局）；④ 用小模型做意图路由、大模型做生成。
-
-**Q: Spring AI 的 Advisor 是什么？**
-A: 类似 AOP 拦截器，在 LLM 调用前后插入逻辑。本项目用了 `LoggingAdvisor`（日志 prompt/response）和 `TokenUsageAdvisor`（累加 token）。
-
-**Q: RabbitMQ 用在哪？**
-A: v2：异步退款工单、订单状态变更触发主动通知客服。MVP 同步退款。
-
-**Q: MySQL 表怎么设计？**
-A: 见 `src/main/resources/schema-mysql.sql`。user / orders / refund / coupon / product 五张表，关键索引 `idx_user (user_id)`。
-
-**Q: Docker Compose 一键启动？**
-A: `docker-compose.yml` 定义 mysql + redis + app 三个 service，通过 env 注入连接信息，schema-mysql.sql 挂载到 MySQL init 目录。
-
-### AI / Agent 专项
-
-**Q: Agent 和普通 LLM 调用区别？**
-A: Agent 能自主规划多步、调用工具、根据工具结果决定下一步。本项目通过 `AgentService` 路由器 + 4 类 Specialist Agent 实现。
-
-**Q: ReAct 是什么？**
-A: Reasoning + Acting 循环：Thought → Action → Observation → Thought...。Spring AI 的 Function Calling 自动实现这个循环。
-
-**Q: Function Calling vs Prompt 调用？**
-A: FC 准确率更高，模型原生支持；Prompt 调用灵活但靠模型自律、不可靠。本项目严格使用 FC。
-
-**Q: RAG 检索不准怎么排查？**
-A: ① 看召回：topK=20 是否覆盖目标文档；② 看 chunk 大小：本项目按"问题+答案"整篇切；③ 看 BM25 分词：CJK 用 unigram + bigram；④ 看 query 改写：QueryRewriter 是否生效。
-
-**Q: 向量库选型？**
-A: 本项目使用 BM25 内存检索，适合 FAQ 场景。生产可选 Milvus（性能强但部署重）或 Qdrant（单二进制 + REST/gRPC，demo 友好）。
-
-**Q: 怎么防止 prompt 注入？**
-A: 三层：① 系统 prompt 约束；② 工具鉴权用 ThreadLocal，userId 不通过工具参数；③ 敏感操作（如退款）二次确认。
-
-**Q: 多 Agent 协作和单 Agent 区别？**
-A: 单 Agent 适合窄场景（客服）；多 Agent 适合复杂任务分解（电商=客服+推荐+风控）。本项目是 4 个 Specialist Agent + 1 个 Router。
-
-**Q: Token 怎么计算？**
-A: 中文约 1.5 字/token，英文 0.75 字/token。DeepSeek API 返回 `usage.prompt_tokens` / `completion_tokens`，由 `TokenUsageAdvisor` 累加。
-
-**Q: Embedding 模型选型？**
-A: 本项目使用 BM25-only 向量检索，无需 Embedding 模型。如需语义检索，可选 bge-small-zh（轻量）/ bge-large-zh-v1.5（更准但慢）。
-
-**Q: 流式响应怎么实现？**
-A: LLM 端 DeepSeek 原生支持 SSE；Spring AI `ChatClient.stream().content()` 返回 `Flux<String>`；本项目包成 `Flux<ServerSentEvent<String>>` 推给客户端。
 
 ---
 
